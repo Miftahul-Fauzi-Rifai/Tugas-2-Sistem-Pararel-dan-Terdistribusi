@@ -1,0 +1,474 @@
+openapi: 3.0.0
+info:
+  title: Distributed Synchronization System API
+  description: API for managing distributed locks, queues, and cache coherence
+  version: 1.0.0
+  contact:
+    name: Distributed Systems Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8001
+    description: Local node (example)
+  - url: http://localhost:8002
+    description: Secondary node (example)
+  - url: http://localhost:8003
+    description: Tertiary node (example)
+
+tags:
+  - name: Health
+    description: Node health and status endpoints
+  - name: Locks
+    description: Distributed lock management
+  - name: Queue
+    description: Distributed queue operations
+  - name: Cache
+    description: Cache coherence operations
+  - name: Metrics
+    description: System metrics and monitoring
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - Health
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Node is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  node_id:
+                    type: string
+                  state:
+                    type: string
+                    enum: [leader, follower, candidate]
+                  term:
+                    type: integer
+
+  /status:
+    get:
+      summary: Get detailed node status
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Node status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  node_id:
+                    type: string
+                  state:
+                    type: string
+                  term:
+                    type: integer
+                  voted_for:
+                    type: string
+                    nullable: true
+                  is_running:
+                    type: boolean
+
+  /metrics:
+    get:
+      summary: Get system metrics
+      tags:
+        - Metrics
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  node_id:
+                    type: string
+                  messages_sent:
+                    type: integer
+                  messages_received:
+                    type: integer
+                  queue_items_processed:
+                    type: integer
+
+  /locks/acquire:
+    post:
+      summary: Acquire a distributed lock
+      tags:
+        - Locks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - lock_id
+                - requester_id
+              properties:
+                lock_id:
+                  type: string
+                  description: Unique lock identifier
+                requester_id:
+                  type: string
+                  description: Node requesting the lock
+                lock_type:
+                  type: string
+                  enum: [exclusive, shared]
+                  default: exclusive
+                ttl:
+                  type: integer
+                  description: Time to live in seconds
+                  nullable: true
+      responses:
+        '200':
+          description: Lock operation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lock_id:
+                    type: string
+                  error:
+                    type: string
+                    nullable: true
+        '400':
+          description: Bad request
+
+  /locks/release:
+    post:
+      summary: Release a distributed lock
+      tags:
+        - Locks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - lock_id
+                - owner_id
+              properties:
+                lock_id:
+                  type: string
+                owner_id:
+                  type: string
+      responses:
+        '200':
+          description: Lock released
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lock_id:
+                    type: string
+                  error:
+                    type: string
+                    nullable: true
+
+  /locks:
+    get:
+      summary: Get all active locks
+      tags:
+        - Locks
+      responses:
+        '200':
+          description: List of active locks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_locks:
+                    type: integer
+                  lock_acquisitions:
+                    type: integer
+                  lock_rejections:
+                    type: integer
+                  active_locks:
+                    type: object
+
+  /locks/deadlock:
+    get:
+      summary: Check for deadlocks
+      tags:
+        - Locks
+      responses:
+        '200':
+          description: Deadlock detection result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  has_deadlock:
+                    type: boolean
+                  cycle:
+                    type: array
+                    items:
+                      type: string
+                    nullable: true
+
+  /queue/enqueue:
+    post:
+      summary: Enqueue a message
+      tags:
+        - Queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - queue_name
+                - content
+                - producer_id
+              properties:
+                queue_name:
+                  type: string
+                content:
+                  type: object
+                producer_id:
+                  type: string
+      responses:
+        '200':
+          description: Message enqueued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message_id:
+                    type: string
+
+  /queue/dequeue:
+    post:
+      summary: Dequeue a message
+      tags:
+        - Queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - queue_name
+                - consumer_id
+              properties:
+                queue_name:
+                  type: string
+                consumer_id:
+                  type: string
+      responses:
+        '200':
+          description: Message dequeued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message_id:
+                    type: string
+                  content:
+                    type: object
+                  producer_id:
+                    type: string
+        '404':
+          description: No message available
+
+  /queue/status:
+    get:
+      summary: Get queue status
+      tags:
+        - Queue
+      responses:
+        '200':
+          description: Queue metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages_enqueued:
+                    type: integer
+                  messages_dequeued:
+                    type: integer
+                  queue_sizes:
+                    type: object
+
+  /cache/{key}:
+    get:
+      summary: Get value from cache
+      tags:
+        - Cache
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cache hit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                  found:
+                    type: boolean
+        '404':
+          description: Cache miss
+
+    post:
+      summary: Put value in cache
+      tags:
+        - Cache
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Value cached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  state:
+                    type: string
+                    enum: [modified, exclusive, shared, invalid]
+
+    delete:
+      summary: Invalidate cache entry
+      tags:
+        - Cache
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cache entry invalidated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  invalidated:
+                    type: boolean
+
+  /cache:
+    get:
+      summary: Get cache status
+      tags:
+        - Cache
+      responses:
+        '200':
+          description: Cache metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  node_id:
+                    type: string
+                  cache_size:
+                    type: integer
+                  cache_hits:
+                    type: integer
+                  cache_misses:
+                    type: integer
+                  hit_rate:
+                    type: number
+
+components:
+  schemas:
+    Lock:
+      type: object
+      properties:
+        lock_id:
+          type: string
+        owner:
+          type: string
+        lock_type:
+          type: string
+          enum: [exclusive, shared]
+        acquired_at:
+          type: number
+        ttl:
+          type: integer
+          nullable: true
+        is_expired:
+          type: boolean
+
+    Message:
+      type: object
+      properties:
+        message_id:
+          type: string
+        content:
+          type: object
+        producer_id:
+          type: string
+        timestamp:
+          type: number
+
+    CacheEntry:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        state:
+          type: string
+          enum: [modified, exclusive, shared, invalid]

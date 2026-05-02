@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - d:/docker_volumes/redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  node1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      NODE_ID: node1
+      NODE_HOST: 0.0.0.0
+      NODE_PORT: 8001
+      PEERS: http://node2:8002,http://node3:8003
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+      DEBUG_MODE: "false"
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    volumes:
+      - d:/docker_volumes/logs_node1:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  node2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      NODE_ID: node2
+      NODE_HOST: 0.0.0.0
+      NODE_PORT: 8002
+      PEERS: http://node1:8001,http://node3:8003
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+      DEBUG_MODE: "false"
+    ports:
+      - "8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    volumes:
+      - d:/docker_volumes/logs_node2:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  node3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      NODE_ID: node3
+      NODE_HOST: 0.0.0.0
+      NODE_PORT: 8003
+      PEERS: http://node1:8001,http://node2:8002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+      DEBUG_MODE: "false"
+    ports:
+      - "8003:8003"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - distributed_network
+    volumes:
+      - d:/docker_volumes/logs_node3:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  distributed_network:
+    driver: bridge
