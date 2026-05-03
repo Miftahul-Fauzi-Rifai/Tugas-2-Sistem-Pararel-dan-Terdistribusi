@@ -345,69 +345,15 @@ The system achieves the following performance characteristics:
 - **MESI Protocol**: Minimal invalidation traffic
 - **LRU Eviction**: Optimal cache memory usage
 
-## Deployment Guide
-
-### Production Deployment
-
-```bash
-# Build Docker images
-docker build -t distributed-sync:latest -f docker/Dockerfile.node .
-
-# Push to registry
-docker tag distributed-sync:latest your-registry/distributed-sync:latest
-docker push your-registry/distributed-sync:latest
-
-# Deploy on Kubernetes (if available)
-kubectl apply -f kubernetes/deployment.yaml
-```
-
-### Monitoring
-
-- Prometheus metrics available at `/metrics`
-- System logs in `logs/node.log`
-- Performance metrics tracking enabled by default
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: Nodes cannot communicate
-```
-Solution: Ensure peers are correctly configured and firewall allows traffic
-```
-
-**Issue**: High cache miss rate
-```
-Solution: Increase CACHE_MAX_SIZE or analyze access patterns
-```
-
-**Issue**: Deadlock detected
-```
-Solution: Review lock acquisition order, implement timeout policies
-```
-
-## Contributing
-
-1. Follow PEP 8 style guidelines
-2. Add tests for new features
-3. Update documentation
-4. Run `pytest` before submitting
-
-## References
-
-- Raft Consensus: https://raft.github.io/
-- MESI Protocol: https://en.wikipedia.org/wiki/MESI_protocol
-- Consistent Hashing: https://en.wikipedia.org/wiki/Consistent_hashing
-
-## License
-
-MIT License
 
 ## Authors
 
-Distributed Systems Team - Semester 6
+Miftahul Fauzi Rifai - 11231040
 
----
+## Video Demo
 
-**Last Updated**: May 2, 2026
-**Version**: 1.0.0
+- Link video: https://youtu.be/l8kzPzEJFP0
+
+## Referensi
+
+Pembahasan teori lengkap ada di 
