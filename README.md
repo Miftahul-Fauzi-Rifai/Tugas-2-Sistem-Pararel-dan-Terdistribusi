@@ -356,4 +356,4 @@ Miftahul Fauzi Rifai - 11231040
 
 ## Dokumen Pembahasan
 
-Pembahasan teori lengkap ada di [`report.pdf`](report.pdf)
+Pembahasan teori lengkap ada di [`report_11231040_Miftahul Fauzi Rifai.pdf`](report_11231040_Miftahul Fauzi Rifai.pdf)
