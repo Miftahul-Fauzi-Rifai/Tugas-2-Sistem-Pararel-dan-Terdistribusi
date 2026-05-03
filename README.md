@@ -354,6 +354,6 @@ Miftahul Fauzi Rifai - 11231040
 
 - Link video: https://youtu.be/l8kzPzEJFP0
 
-## Referensi
+## Dokumen Pembahasan
 
-Pembahasan teori lengkap ada di 
+Pembahasan teori lengkap ada di [`report.pdf`](report.pdf)
